@@ -1,62 +1,80 @@
 import scrapy
 from scrapy_films.items import MovieItem
-from datetime import datetime, timedelta
-from urllib.parse import urlparse, parse_qs
+from datetime import datetime
 import random
-from colorama import Fore, Style
 
 class CrawlFilmSpider(scrapy.Spider):
     name = "crawl_film"
     allowed_domains = ["www.allocine.fr"]
+    # 111874
+    start_id = 111874
+    end_id = 700000
 
-    # Liste des user agents
     USER_AGENTS = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
         'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-        'Mozilla/5.0 (Windows NT 5.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'
+        'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14',
+        'Mozilla/5.0 (Windows NT 6.1; rv:54.0) Gecko/20100101 Firefox/54.0',
+        'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
     ]
 
-    # Générer dynamiquement les URLs de départ
-    start_urls = []
-    start_date = datetime(2005, 1,5)  # Date de début
-    end_date = datetime(2023, 7, 5)  # Date de fin
-    week_delta = timedelta(days=7)  # Intervalle de temps (une semaine)
-
-    current_date = start_date
-    while current_date <= end_date:
-        # Ajouter l'URL à la liste des URLs de départ
-        start_urls.append(f"https://www.allocine.fr/boxoffice/france/sem-{current_date.strftime('%Y-%m-%d')}/")
-        # Passer à la semaine suivante
-        current_date += week_delta
-
     def start_requests(self):
-        for url in self.start_urls:
-            yield scrapy.Request(url=url, headers={'User-Agent': random.choice(self.USER_AGENTS)})
+        # yield scrapy.Request(f"https://www.allocine.fr/film/fichefilm-265358/box-office/", self.parse)
+        for i in range(self.start_id, self.end_id):
+            user_agent = random.choice(self.USER_AGENTS)
+            self.logger.info(f"Current iteration: {i}")
+            yield scrapy.Request(f"https://www.allocine.fr/film/fichefilm-{i}/box-office/", self.parse, headers={'User-Agent': user_agent})
+
 
     def parse(self, response):
-        movie_rows = response.css('.responsive-table-row')  # Récupérer toutes les lignes de films
+        item = MovieItem()
 
-        for row in movie_rows:
-            semaine = row.css("td[data-heading='Semaine']::text").get()  # Récupérer la valeur de la semaine
-            if semaine and semaine.strip() == "1":
-                item = MovieItem()
-                item['title'] = row.css('.meta-title-link::text').get()  # Titre du film
-                item['entries'] = row.css('strong::text').get()  # Entrées du film
+        entries_one = response.css('.title-punchline+ .section .responsive-table-row:nth-child(1) .col-bg::text').get()
+        entries_two = response.css('.title-punchline+ .section .responsive-table-row:nth-child(2) .col-bg::text').get()
+        title = response.css('.titlebar-link::text').get()
+        box_office_fr = response.css('.title-punchline+ .section .titlebar-title-md::text').get()
+        date_str = response.css('.responsive-table-row:nth-child(1) .blue-link::text').get()
+
+        if entries_one and box_office_fr == "Box Office France":
+            item['title'] = title
+            try:
+                entries_one = int(entries_one.replace(" ", ""))
+                entries_two = int(entries_two.replace(" ", ""))
                 
+                if entries_one > entries_two:
+                    entries = entries_one
+                else:
+                    entries = entries_two
+                item['entries'] = entries
+                self.logger.info(f"Entries found: {entries}")
+                self.logger.info(f"Title found: {title}")
                 
-                # Extraire la date de l'URL
-                parsed_url = urlparse(response.url)
-                date_str = parsed_url.path.split('/')[-2]  # La date se trouve dans le chemin de l'URL
-                date_str = date_str.replace('sem-', '')  # Enlever 'sem-' de la chaîne de date
-                try:
-                    item['date'] = datetime.strptime(date_str, '%Y-%m-%d').date()
-                except ValueError:
-                    print(Fore.RED + f"Invalid date format in URL: {response.url}" + Style.RESET_ALL)
-                    continue
+                if date_str:
+                    # Nettoyer la chaîne de caractères
+                    date_str = date_str.strip()
+                    
+                    # Extraire le jour, le mois et l'année
+                    date_parts = date_str.split()
+                    if len(date_parts) == 7:
+                        day1, month, year = date_parts[0], date_parts[1], date_parts[2]
+                    elif len(date_parts) == 6:
+                        day1, month, year = date_parts[0], date_parts[1], date_parts[5]
+                    elif len(date_parts) == 5:
+                        day1, month, year = date_parts[0], date_parts[3], date_parts[4]
+                    else:
+                        self.logger.warning(f"Unexpected date format: {date_str}")
+                        return
 
-
-                print(Fore.GREEN + f"Title: {item['title']}, Entries: {item['entries']}, Date: {item['date']}" + Style.RESET_ALL)
-
+                    print(day1, month, year)
+                    # Convertir le mois en français en numéro de mois
+                    months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+                    month_number = months.index(month) + 1
+                    # Convertir le jour, le mois et l'année en format 'année-mois-jour'
+                    date = datetime(int(year), month_number, int(day1))
+                    item['date'] = date.strftime('%Y-%m-%d')
                 yield item
+            except ValueError:
+                self.logger.error("Error converting entries to int or date")
+        else:
+            self.logger.warning("No entries found")
