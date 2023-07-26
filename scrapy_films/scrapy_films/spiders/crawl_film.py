@@ -7,7 +7,7 @@ class CrawlFilmSpider(scrapy.Spider):
     name = "crawl_film"
     allowed_domains = ["www.allocine.fr"]
     # 111874
-    start_id = 111874
+    start_id = 310239
     end_id = 700000
 
     USER_AGENTS = [
