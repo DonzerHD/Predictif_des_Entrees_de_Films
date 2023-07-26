@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block login %}
+
+<h2 class="h2">Connexion</h2>
+<div class="background-image">
+    <img src="{% static 'images/cinema.jpg' %}" alt="Cinema">
+    <div class="center">
+        <form method="POST" class="login-form">
+            {% csrf_token %}
+            <div>
+                <label for="id_username">Nom d'utilisateur :</label>
+                {{ form.username }}
+            </div>
+            <div class="connect">
+                <label for="id_password">Mot de passe :</label>
+                {{ form.password }}
+            </div>
+            <button class="button" type="submit">Se connecter</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
