@@ -20,24 +20,24 @@ nav {
     background-color: #ffffff;
     padding: 0;
     display: flex;
-    align-items: center;
+    align-items:end;
     justify-content: space-between; 
     max-width: 100%; 
     margin: 0 auto;
     text-shadow: 2px 2px 2px #000000;
-    font-family: 'Tilt Prism', cursive;
-    font-weight: 400;
-    
+    font-family: 'Tilt Prism', cursive;    
+    height: 135px;
 }
 
 nav a {
     display: inline-block;
     text-decoration: none;
     color: #e8232a;
-    font-size: 45px;
+    font-size: 40px;
     margin: auto;
     
 }
+
 .usname{
     position: absolute;
     top: 1%;
@@ -46,18 +46,25 @@ nav a {
     font-family: 'Orbitron', sans-serif;
     font-weight: bolder;
     font-size: 25px;
-    
+    margin: 5px;
+   
+
 }
 
 span{
-    background-color: #00FF00;
+   
     color:#00FF00    ;
     border-radius: 50px;
     text-shadow: none;
+    font-size: 30px;   
+    position: absolute;
+    top: -5%;
+    left: 120%;
+
 }
 
 .usname:hover span {
-    background-color: #e8232a; 
+    
     color: #e8232a;
 }
 
