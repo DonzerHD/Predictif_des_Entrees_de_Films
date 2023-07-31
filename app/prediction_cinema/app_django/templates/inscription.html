@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %} 
+{% block inscription %}
+    <h2 class="h2">Inscription</h2>
+    <div class="background-image">
+        <img src="{% static 'images/cinema.jpg' %}" alt="Cinema">
+        <div class="center">
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <div>
+                    <label for="id_username">Nom d'utilisateur :</label>
+                    {{ form.username }}
+                </div>
+                <div class="connectinsc">
+                    <label for="id_password1">Mot de passe :</label>
+                    {{ form.password1 }}
+                </div>
+                <div class="connectinsc">
+                    <label for="id_password2">Confirmez le mot de passe :</label>
+                    {{ form.password2 }}
+                </div>
+                <button class="buttoninsc" type="submit">S'inscrire</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
