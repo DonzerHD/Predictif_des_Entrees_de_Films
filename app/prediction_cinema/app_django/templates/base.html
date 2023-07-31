@@ -3,8 +3,8 @@
     <head>
         <title>CineFlix</title>
         {% load static %}
-        <link rel="stylesheet" type="text/css" href="{% static 'normalize.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/normalize.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
         <link href="https://fonts.googleapis.com/css?family=Tilt+Prism&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Orbitron&display=swap" rel="stylesheet">
     </head>
@@ -15,14 +15,14 @@
             <img src="{% static 'images/logo.png' %}" alt="Logo">
         </a>
         {% if user.is_authenticated %}    
-            <a href="{% url 'prediction' %}">Prédictions</a>
-            <a href="{% url 'historique' %}">Historique</a>
+            <a class="navtxt" href="{% url 'prediction' %}">Prédictions</a>
+            <a class="navtxt" href="{% url 'historique' %}">Historique</a>
             <a class="usname" href="{% url 'logout' %}">{{ user.username }} <span>⏼</span></a>
           
             
         {% else %}
-            <a href="{% url 'inscription' %}">Inscription</a>
-            <a href="{% url 'login' %}">Connexion</a>
+            <a class="navtxt" href="{% url 'inscription' %}">Inscription</a>
+            <a class="navtxt" href="{% url 'login' %}">Connexion</a>
 
         {% endif %}
     </nav>
