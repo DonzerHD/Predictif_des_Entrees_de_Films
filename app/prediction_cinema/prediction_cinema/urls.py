@@ -17,14 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from app_django import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
-    path('login/', views.CustomLoginView.as_view(next_page='home'), name='login'),
-    path('logout/', views.CustomLogoutView.as_view(next_page='home'), name='logout'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     path('inscription/', views.inscription, name='inscription'),
     path('predcition/', views.prediction, name='prediction'),
     path('historique/', views.historique, name='historique'),
 ]
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
