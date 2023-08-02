@@ -1,0 +1,28 @@
+# Utilisation d'une image Python comme base
+FROM python:3.8-buster
+
+# Définition du répertoire de travail
+WORKDIR /app
+
+# Copie du requirements.txt pour installation des dépendances
+COPY requirements.txt ./
+
+# Mise à jour des dépôts apt, installation des dépendances nécessaires à l'installation des pilotes ODBC pour SQL Server et installation des dépendances Python
+RUN apt-get update && \
+    apt-get install -y gcc g++ --no-install-recommends curl gnupg2 unixODBC-dev && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18 && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copie du reste de l'application dans le répertoire de travail
+COPY . .
+
+# Définition de la variable d'environnement nécessaire pour que Python envoie correctement les sorties à Docker Log
+ENV PYTHONUNBUFFERED=1
+
+# Exécution de l'application
+CMD ["python", "./app.py"]
