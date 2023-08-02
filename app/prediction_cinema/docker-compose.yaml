@@ -1,0 +1,30 @@
+version: '3.1'
+
+services:
+  webserver:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mssql+pyodbc://adminfilms:Denain59220,@films-serveur.database.windows.net,1433/films_bdd?driver=ODBC+Driver+18+for+SQL+Server
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__FERNET_KEY=7MTLEq3OYx7lviA8ka4I7Wt5Y07w-IMEKrDfsbqVtAc=
+    ports:
+      - "8080:8080"
+
+  scheduler:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mssql+pyodbc://adminfilms:Denain59220,@films-serveur.database.windows.net,1433/films_bdd?driver=ODBC+Driver+18+for+SQL+Server
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__FERNET_KEY=7MTLEq3OYx7lviA8ka4I7Wt5Y07w-IMEKrDfsbqVtAc=
+
+  sql_server:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Denain59220,
+    ports:
+      - "1433:1433"
