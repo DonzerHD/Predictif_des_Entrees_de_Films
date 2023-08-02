@@ -51,10 +51,6 @@ coverage.xml
 cover/
 config.json
 **/config.json
-/outputs/
-**/outputs/
-**/outputs/*
-notebooks/outputs/
 # Translations
 *.mo
 *.pot
