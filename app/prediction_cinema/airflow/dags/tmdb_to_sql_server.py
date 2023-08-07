@@ -1,5 +1,6 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
+from airflow.models import Variable
 from datetime import datetime, timedelta
 import requests
 import time
@@ -15,7 +16,7 @@ default_args = {
 
 dag = DAG('tmdb_data_extraction', default_args=default_args, schedule_interval='@weekly')
 
-def extraction_films_tmdb():
+def extraction_films_tmdb(**context):
     API_KEY = "a6275c028adf4e9bc5ae5f67edfb4c5f"
     URL_UPCOMING_MOVIES = f'https://api.themoviedb.org/3/movie/upcoming?api_key={API_KEY}&language=fr-FR&region=FR'
     MIN_BUDGET = 1000000
@@ -57,9 +58,13 @@ def extraction_films_tmdb():
         
         time.sleep(0.10)
 
-    return extracted_movies
+    # on pousse les données extraites pour les rendre disponibles aux tâches suivantes
+    context['ti'].xcom_push(key='extracted_movies', value=extracted_movies)
 
-def charger_donnes_bdd(extracted_movies):
+def charger_donnes_bdd(**context):
+    # on récupère les données extraites de la tâche précédente
+    extracted_movies = context['ti'].xcom_pull(key='extracted_movies', task_ids='extraction_films_tmdb')
+
     conn_str = (
         r'DRIVER={ODBC Driver 18 for SQL Server};'
         r'SERVER=tcp:films-serveur.database.windows.net,1433;'  
@@ -103,17 +108,16 @@ def charger_donnes_bdd(extracted_movies):
     cnxn.commit()
     cursor.close()
     cnxn.close()    
-    
-    
 
+# on ajoute 'provide_context=True' pour que les tâches reçoivent un dictionnaire de contexte en argument
 extract_task = PythonOperator(
-    task_id='extract_data_from_tmdb',
+    task_id='extraction_films_tmdb',
     python_callable=extraction_films_tmdb,
     provide_context=True,
     dag=dag)
 
 load_task = PythonOperator(
-    task_id='load_data_to_sql_server',
+    task_id='charger_donnes_bdd',
     python_callable=charger_donnes_bdd,
     provide_context=True,
     dag=dag)

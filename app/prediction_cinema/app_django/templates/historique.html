@@ -1,11 +1,27 @@
 {% extends 'base.html' %}
-{% load static %} 
-
+{% load static %}
 
 {% block historique %}
-    <div class="title-container">
-        <img src="{% static 'images/coupe1.png' %}" alt="Coupe" class="image-left">
-        <h2 class="h2hist">Historique</h2>
-        <img src="{% static 'images/pelicule1.png' %}" alt="Pelicule" class="image-right">
+
+    <h2 class="h2"> Historique des Predictions </h2>
+    <form class="searchForm" action="{% url 'historique' %}" method="get" id="searchForm">
+        <input type="text" name="search" id="searchInput" placeholder="Rechercher par titre...">
+        <input type="submit" value="Rechercher">
+    </form>
+
+    <div class="movies-container">
+        {% for movie in movies %}
+            <div class="movie">
+                <img src="{{ movie.affiche }}" alt="{{ movie.titre_fr }} poster" width="100">
+                <div class="movie-info">
+                    <h2>{{ movie.titre_fr }}</h2>
+                    <p>Réalisateur: {{ movie.realisateur }}</p>
+                    <p>Acteurs: {{ movie.acteurs }}</p>
+                    <p>Genres: {{ movie.genres }}</p>
+                    <p>Date de sortie: {{ movie.date_sortie }}</p>
+                    <p>Entrée prédits: {{ movie.entree_predit }}</p>
+                </div>
+            </div>
+        {% endfor %}
     </div>
 {% endblock %}
