@@ -3,6 +3,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from .forms import CustomUserCreationForm
 from .models import UpcomingMovie
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 import requests
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta
@@ -34,7 +35,35 @@ def inscription(request):
         form = CustomUserCreationForm()
     return render(request, 'inscription.html', {'form': form})
     
+def select_rooms(predicted_entries):
+    """Sélectionnez les salles appropriées en fonction des entrées prévues."""
+    salles = {
+        "Salle 1": 140,
+        "Salle 2": 100,
+        "Salle 3": 80,
+        "Salle 4": 80
+    }
 
+    if predicted_entries < 0.2 * min(salles.values()):
+        return "Pas rentable"
+
+    recommended_salles = []
+
+    sorted_salles = sorted(salles.items(), key=lambda x: x[1])
+
+    while predicted_entries > 0 and sorted_salles:
+        for index, (salle, capacity) in enumerate(sorted_salles):
+            if predicted_entries <= capacity:
+                if predicted_entries >= 0.2 * capacity:
+                    recommended_salles.append(salle)
+                    predicted_entries -= capacity
+                break
+
+        sorted_salles.pop(index)
+
+    return recommended_salles
+
+@login_required  
 def films_avec_predictions(request):
     API_KEY = "a6275c028adf4e9bc5ae5f67edfb4c5f"
     URL = f"https://api.themoviedb.org/3/movie/upcoming?api_key={API_KEY}&region=FR&language=fr-FR"
@@ -54,7 +83,7 @@ def films_avec_predictions(request):
         movie_details = requests.get(details_url).json()
         credits = requests.get(credits_url).json()
 
-        if movie_details['budget'] >= 0: 
+        if movie_details['budget'] >= 0:
             existing_movie = UpcomingMovie.objects.filter(titre_non_modifie=movie['original_title']).first()
 
             if not existing_movie:
@@ -63,12 +92,18 @@ def films_avec_predictions(request):
                 upcoming_movie.save()
             else:
                 upcoming_movie = existing_movie
+            
+            predicted_local_entries = upcoming_movie.get_predicted_local_entries()
+            room_to_open = select_rooms(predicted_local_entries)
 
+            upcoming_movie.predicted_local_entries = predicted_local_entries
+            upcoming_movie.room_to_open = room_to_open
             movies_to_display.append(upcoming_movie)
 
     return render(request, "prediction.html", {"movies": movies_to_display})
 
 
+@login_required
 def historique(request, year=None, month=None, day=None):
     search_query = request.GET.get('search')
 
@@ -79,7 +114,12 @@ def historique(request, year=None, month=None, day=None):
     movies_for_week = UpcomingMovie.objects.all()
 
     if search_query:
-        movies_for_week = movies_for_week.filter(Q(titre_fr__icontains=search_query))
+        movies_for_week = movies_for_week.filter(
+            Q(titre_fr__icontains=search_query) |
+            Q(acteurs__icontains=search_query) |
+            Q(genres__icontains=search_query) |
+            Q(realisateur__icontains=search_query) 
+            )
 
     if year and month and day:
         movies_for_week = movies_for_week.filter(date_sortie__year=year, date_sortie__month=month, date_sortie__day=day)
@@ -88,4 +128,6 @@ def historique(request, year=None, month=None, day=None):
         'movies': movies_for_week,
         'now': datetime.now(),
     }
+
     return render(request, 'historique.html', context)
+

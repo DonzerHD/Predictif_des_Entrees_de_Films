@@ -19,6 +19,7 @@ class UpcomingMovie(models.Model):
     titre_non_modifie = models.CharField(max_length=200)
     affiche = models.CharField(max_length=500, blank=True, null=True)
     entree_predit = models.PositiveIntegerField(null=True, blank=True)
+    
 
     @staticmethod
     def from_tmdb_data(movie, movie_details, credits):
@@ -65,3 +66,10 @@ class UpcomingMovie(models.Model):
             print(f"HTTP error occurred: {http_err}")
         except Exception as err:
             print(f"Other error occurred: {err}")
+
+    def get_predicted_local_entries(self):
+        national_entries_predicted = self.entree_predit
+        local_entries = national_entries_predicted * 1/2000
+        return round(local_entries)
+    
+    

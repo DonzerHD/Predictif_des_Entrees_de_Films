@@ -1,11 +1,18 @@
 {% extends 'base.html' %}
 {% load static %}
 
+
+
 {% block historique %}
 
-    <h2 class="h2"> Historique des Predictions </h2>
+<h2 class="h2">
+    <img src="{% static 'images/coupe1.png' %}" alt="Icône de coupe" class="image-left">
+    Historique des Predictions
+    <img src="{% static 'images/pelicule1.png' %}" alt="Icône de pellicule" class="image-right">
+</h2>
+
     <form class="searchForm" action="{% url 'historique' %}" method="get" id="searchForm">
-        <input type="text" name="search" id="searchInput" placeholder="Rechercher par titre...">
+        <input type="text" name="search" id="searchInput" placeholder="Rechercher par titre  acteurs...">
         <input type="submit" value="Rechercher">
     </form>
 
@@ -15,11 +22,11 @@
                 <img src="{{ movie.affiche }}" alt="{{ movie.titre_fr }} poster" width="100">
                 <div class="movie-info">
                     <h2>{{ movie.titre_fr }}</h2>
-                    <p>Réalisateur: {{ movie.realisateur }}</p>
-                    <p>Acteurs: {{ movie.acteurs }}</p>
-                    <p>Genres: {{ movie.genres }}</p>
-                    <p>Date de sortie: {{ movie.date_sortie }}</p>
-                    <p>Entrée prédits: {{ movie.entree_predit }}</p>
+                    <p class="histo"><strong> Réalisateur: </strong> {{ movie.realisateur }}</p>
+                    <p class="histo"><strong> Acteurs: </strong> {{ movie.acteurs }}</p>
+                    <p class="histo"><strong> Genres: </strong> {{ movie.genres }}</p>
+                    <p class="histo"><strong> Date de sortie: </strong> {{ movie.date_sortie }}</p>
+                    <p class="histo"><strong>Entrée prédits:</strong> {{ movie.entree_predit }}</p>
                 </div>
             </div>
         {% endfor %}

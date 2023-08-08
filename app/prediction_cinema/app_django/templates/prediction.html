@@ -1,32 +1,78 @@
-{% extends "base.html" %} 
-
+{% extends "base.html" %}
+{% load static %}
 {% block prediction %}
-    <h1>Films à venir cette semaine</h1>
+    <h2 class="h2">
+        <img src="{% static 'images/popcorn.png' %}" alt="Icône de popcoron" class="image-left">
+        Cette semaine au cinéma
+        <img src="{% static 'images/popcorn.png' %}" alt="Icône de pellicule" class="image-right">
+    </h2>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Titre</th>
-                <th>Realisateur</th>
-                <th>Acteurs</th>
-                <th>Genres</th>
-                <th>Date de sortie</th>
-                <th>Predictions</th>
-                <th>Affiche</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for movie in movies %}
-                <tr>
-                    <td>{{ movie.titre_fr }}</td>
-                    <td>{{ movie.realisateur }}</td>
-                    <td>{{ movie.acteurs }}</td>
-                    <td>{{ movie.genres }}</td>
-                    <td>{{ movie.date_sortie }}</td>
-                    <td>{{ movie.entree_predit }}</td>
-                    <td><img src="{{ movie.affiche }}" alt="{{ movie.titre_fr }} poster" width="100"></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="carousel">
+    {% for movie in movies %}
+    <div class="carousel-item" data-movie-info="{{ movie.titre_fr }} | {{ movie.realisateur }} | {{ movie.acteurs }} | {{ movie.genres }} | {{ movie.date_sortie }} | {{ movie.entree_predit }} | {{ movie.predicted_local_entries }} | {{ movie.room_to_open }}">
+        <img src="{{ movie.affiche }}" alt="{{ movie.titre_fr }} poster" width="100">
+    </div>
+    {% endfor %}
+</div>
+
+<button class="prev">←</button>
+<button class="next">→</button>
+
+<div class="movie-info">
+    <h3 class="movie-title"></h3>
+    <p class="movie-details"></p>
+</div>
+
+<script>
+    const items = document.querySelectorAll('.carousel-item');
+    const prevButton = document.querySelector('.prev');
+    const nextButton = document.querySelector('.next');
+    const infoBoxTitle = document.querySelector('.movie-title');
+    const infoBoxDetails = document.querySelector('.movie-details');
+
+    let currentIndex = 0;
+    items[currentIndex].classList.add('active');
+
+    function updateInfo() {
+        const info = items[currentIndex].getAttribute('data-movie-info').split(' | ');
+        infoBoxTitle.textContent = info[0];
+        infoBoxDetails.innerHTML = `
+            <strong>Réalisateur :</strong> ${info[1]}<br>
+            <strong>Acteurs :</strong> ${info[2]}<br>
+            <strong>Genres :</strong> ${info[3]}<br>
+            <strong>Date de sortie :</strong> ${info[4]}<br>
+            <strong>Entrées nationales estimées</strong> ${info[5]}<br>
+            <strong>Entrées locales estimées :</strong> ${info[6]}<br>
+            <strong>Salle recommandée :</strong> ${info[7]}
+        `;
+    }
+
+   
+    updateInfo();
+
+    prevButton.addEventListener('click', () => {
+        items[currentIndex].classList.remove('active');
+        currentIndex--;
+        if (currentIndex < 0) {
+            currentIndex = items.length - 1;
+        }
+        items[currentIndex].classList.add('active');
+        updateInfo();
+    });
+
+    nextButton.addEventListener('click', () => {
+        items[currentIndex].classList.remove('active');
+        currentIndex++;
+        if (currentIndex >= items.length) {
+            currentIndex = 0;
+        }
+        items[currentIndex].classList.add('active');
+        updateInfo(); 
+    });
+
+    items.forEach(item => {
+        item.addEventListener('click', updateInfo);
+    });
+</script>
+
 {% endblock %}
