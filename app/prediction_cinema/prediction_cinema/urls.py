@@ -29,5 +29,7 @@ urlpatterns = [
     path('inscription/', views.inscription, name='inscription'),
     path('predcition/', views.prediction, name='prediction'),
     path('historique/', views.historique, name='historique'),
+    path('films_par_mois_annee/', views.films_par_mois_annee, name='films_par_mois_annee'),
+
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
