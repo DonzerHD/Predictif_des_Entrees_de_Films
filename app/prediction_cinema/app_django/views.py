@@ -49,19 +49,22 @@ def select_rooms(predicted_entries):
 
     recommended_salles = []
 
-    sorted_salles = sorted(salles.items(), key=lambda x: x[1])
+    sorted_salles = sorted(salles.items(), key=lambda x: x[1], reverse=True)  
 
-    while predicted_entries > 0 and sorted_salles:
-        for index, (salle, capacity) in enumerate(sorted_salles):
-            if predicted_entries <= capacity:
-                if predicted_entries >= 0.2 * capacity:
-                    recommended_salles.append(salle)
-                    predicted_entries -= capacity
+    for salle, capacity in sorted_salles:
+        if predicted_entries >= 0.2 * capacity:
+            if predicted_entries < capacity:
+                recommended_salles.append(salle)
+                predicted_entries -= predicted_entries  
+            else:
+                recommended_salles.append(salle)
+                predicted_entries -= capacity  
+
+            if predicted_entries <= 0:
                 break
 
-        sorted_salles.pop(index)
-
     return recommended_salles
+
 
 @login_required  
 def films_avec_predictions(request):

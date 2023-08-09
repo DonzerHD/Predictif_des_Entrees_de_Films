@@ -1,6 +1,6 @@
 /* GENERAL  */
 body {
-    background : radial-gradient(ellipse at center, #000000, #6e0f12);
+    background : radial-gradient(ellipse at center, #000000, #e8232a);
     color: #ffffff;
 }
 
@@ -163,6 +163,7 @@ nav img {
     width: 100%;
     height: auto;
     object-fit: cover;
+    margin-bottom: 30px;
 }
 
 .center {
