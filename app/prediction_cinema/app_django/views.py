@@ -45,25 +45,23 @@ def select_rooms(predicted_entries):
     }
 
     if predicted_entries < 0.2 * min(salles.values()):
-        return "Pas rentable"
+        return ["Pas rentable"]
 
     recommended_salles = []
+    while predicted_entries > 0:
+        # Trouver la salle avec la capacité la plus proche de la capacité prévue qui est aussi supérieure ou égale à ces entrées
+        best_fit_salle = min(salles.keys(), key=lambda k: (salles[k] - predicted_entries) if (salles[k] >= predicted_entries and k not in recommended_salles) else float('inf'))
 
-    sorted_salles = sorted(salles.items(), key=lambda x: x[1], reverse=True)  
+        if salles[best_fit_salle] < 0.2 * predicted_entries:
+            break
 
-    for salle, capacity in sorted_salles:
-        if predicted_entries >= 0.2 * capacity:
-            if predicted_entries < capacity:
-                recommended_salles.append(salle)
-                predicted_entries -= predicted_entries  
-            else:
-                recommended_salles.append(salle)
-                predicted_entries -= capacity  
+        recommended_salles.append(best_fit_salle)
+        predicted_entries -= salles[best_fit_salle]
 
-            if predicted_entries <= 0:
-                break
+        if predicted_entries > 0 and predicted_entries < 0.2 * min([s for name, s in salles.items() if name not in recommended_salles]):
+            break
 
-    return recommended_salles
+    return recommended_salles if recommended_salles else ["Pas rentable"]
 
 
 @login_required  
