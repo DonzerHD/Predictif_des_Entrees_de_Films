@@ -1,28 +1,20 @@
-# Utilisation d'une image Python comme base
-FROM python:3.8-buster
+# Utilisez une image de base Python
+FROM python:3.8-slim
 
-# Définition du répertoire de travail
+# Définir les variables d'environnement pour Django (remplacez par vos propres valeurs si nécessaire)
+ENV PYTHONUNBUFFERED 1
+
+# Créer un répertoire pour le code de l'application
 WORKDIR /app
 
-# Copie du requirements.txt pour installation des dépendances
-COPY requirements.txt ./
+# Installez les dépendances nécessaires pour psycopg2-binary
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Mise à jour des dépôts apt, installation des dépendances nécessaires à l'installation des pilotes ODBC pour SQL Server et installation des dépendances Python
-RUN apt-get update && \
-    apt-get install -y gcc g++ --no-install-recommends curl gnupg2 unixODBC-dev && \
-    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql18 && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Copier les fichiers requirements et installer les dépendances
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du reste de l'application dans le répertoire de travail
-COPY . .
-
-# Définition de la variable d'environnement nécessaire pour que Python envoie correctement les sorties à Docker Log
-ENV PYTHONUNBUFFERED=1
-
-# Exécution de l'application
-CMD ["python", "./app.py"]
+# Copier le reste du code de l'application
+COPY . /app/

@@ -27,7 +27,8 @@ urlpatterns = [
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     path('inscription/', views.inscription, name='inscription'),
-    path('predcition/', views.prediction, name='prediction'),
+    path('prediction/', views.films_avec_predictions, name='prediction'),
     path('historique/', views.historique, name='historique'),
 ]
+
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
