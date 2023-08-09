@@ -45,7 +45,7 @@ def select_rooms(predicted_entries):
     }
 
     if predicted_entries < 0.2 * min(salles.values()):
-        return ["Pas rentable"]
+        return "Aucune, pas assez rentable"
 
     recommended_salles = []
     while predicted_entries > 0:
@@ -61,7 +61,11 @@ def select_rooms(predicted_entries):
         if predicted_entries > 0 and predicted_entries < 0.2 * min([s for name, s in salles.items() if name not in recommended_salles]):
             break
 
-    return recommended_salles if recommended_salles else ["Pas rentable"]
+    if recommended_salles:
+        return ', '.join(recommended_salles)
+    else:
+        return "Aucune, pas assez rentable"
+
 
 
 @login_required  
