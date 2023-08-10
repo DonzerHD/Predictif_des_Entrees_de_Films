@@ -2,6 +2,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
 class CustomUserCreationForm(UserCreationForm):
+    """
+    Formulaire personnalisé pour la création d'utilisateurs.
+
+    Ce formulaire étend le formulaire de création d'utilisateur standard de Django
+    pour ajuster les étiquettes, les textes d'aide et les messages d'erreur des champs,
+    ainsi que pour personnaliser l'aspect des widgets.
+    """
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
 
@@ -32,6 +39,19 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password2'].widget.attrs.update({'placeholder': 'Confirmez votre mot de passe'})
 
     def clean_password2(self):
+        """
+        Vérifie la correspondance entre les mots de passe fournis.
+
+        Cette méthode est appelée lors de la validation du formulaire.
+        Elle s'assure que les deux mots de passe entrés par l'utilisateur correspondent.
+        Si ce n'est pas le cas, elle génère une erreur de validation.
+
+        Returns:
+            str: Le second mot de passe (password2) si les mots de passe correspondent.
+
+        Raises:
+            forms.ValidationError: Si les mots de passe ne correspondent pas.
+        """
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         
