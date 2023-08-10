@@ -1,20 +1,14 @@
-# Utilisez une image de base Python
 FROM python:3.8-slim
 
-# Définir les variables d'environnement pour Django (remplacez par vos propres valeurs si nécessaire)
 ENV PYTHONUNBUFFERED 1
 
-# Créer un répertoire pour le code de l'application
 WORKDIR /app
 
-# Installez les dépendances nécessaires pour psycopg2-binary
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier les fichiers requirements et installer les dépendances
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le reste du code de l'application
 COPY . /app/
