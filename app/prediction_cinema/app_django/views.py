@@ -125,12 +125,11 @@ def films_avec_predictions(request):
     # movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= week_end]
     
     # prend la date qui superieur a la date d'aujourd'hui sur 1 mois
+    # prend la date qui est supérieure à la date d'aujourd'hui
     today = date.today()
-    month_end = today + relativedelta(months=1)
-    movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= month_end]
-    
+    movies_after_today = [movie for movie in movies if date.fromisoformat(movie['release_date']) > today]
     movies_to_display = []
-    for movie in movies_this_week:
+    for movie in movies_after_today:
         details_url = f"https://api.themoviedb.org/3/movie/{movie['id']}?api_key={API_KEY}"
         credits_url = f"https://api.themoviedb.org/3/movie/{movie['id']}/credits?api_key={API_KEY}"
 
