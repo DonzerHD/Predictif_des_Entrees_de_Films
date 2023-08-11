@@ -120,10 +120,15 @@ def films_avec_predictions(request):
     response = requests.get(URL)
     movies = response.json()['results']
 
+    # today = date.today()
+    # week_end = today + timedelta(days=7)
+    # movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= week_end]
+    
+    # prend la date qui superieur a la date d'aujourd'hui sur 1 mois
     today = date.today()
-    week_end = today + timedelta(days=7)
-    movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= week_end]
-
+    month_end = today + relativedelta(months=1)
+    movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= month_end]
+    
     movies_to_display = []
     for movie in movies_this_week:
         details_url = f"https://api.themoviedb.org/3/movie/{movie['id']}?api_key={API_KEY}"
