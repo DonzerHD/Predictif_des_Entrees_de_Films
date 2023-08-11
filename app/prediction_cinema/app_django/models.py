@@ -9,6 +9,25 @@ class Utilisateurs(models.Model):
         db_table = 'Utilisateurs'
 
 class UpcomingMovie(models.Model):
+    """
+    Modèle représentant un film à venir.
+
+    Attributs:
+        titre_fr (CharField): Titre du film en français.
+        realisateur (CharField): Nom du réalisateur du film.
+        acteurs (TextField): Liste des principaux acteurs du film.
+        genres (TextField): Genres du film.
+        budget (PositiveIntegerField): Budget du film.
+        date_sortie (DateField): Date de sortie du film.
+        compagnies_production (TextField): Compagnies qui ont produit le film.
+        titre_non_modifie (CharField): Titre original du film (non traduit).
+        affiche (CharField): URL de l'affiche du film.
+        entree_predit (PositiveIntegerField): Prédictions d'entrées pour le film.
+
+    Note:
+        Ce modèle est utilisé pour stocker des informations sur les films à venir
+        et leurs prédictions d'entrées potentielles.
+    """
     titre_fr = models.CharField(max_length=200)
     realisateur = models.CharField(max_length=200)
     acteurs = models.TextField()
@@ -23,6 +42,21 @@ class UpcomingMovie(models.Model):
 
     @staticmethod
     def from_tmdb_data(movie, movie_details, credits):
+        """
+        Crée une instance d'UpcomingMovie à partir des données fournies par l'API TMDB.
+        
+        Cette méthode statique prend en compte les informations principales d'un film 
+        telles que le titre, les acteurs, le réalisateur, les genres, le budget, la date de sortie, 
+        les compagnies de production et l'affiche pour créer une instance d'UpcomingMovie.
+        
+        Args:
+            movie (dict): Un dictionnaire contenant les informations principales du film provenant de TMDB.
+            movie_details (dict): Un dictionnaire contenant des détails supplémentaires sur le film.
+            credits (dict): Un dictionnaire contenant les informations sur les acteurs et l'équipe du film.
+            
+        Returns:
+            UpcomingMovie: Une instance d'UpcomingMovie avec toutes les informations pertinentes du film.
+        """
         actors = [actor['name'] for actor in credits['cast'] if actor['order'] <= 3]
         directors = [crew_member['name'] for crew_member in credits['crew'] if crew_member['job'] == 'Director']
 
@@ -42,6 +76,25 @@ class UpcomingMovie(models.Model):
         return instance
 
     def predict_entries(self):
+        """
+        Prédit le nombre d'entrées pour un film à l'aide d'une API externe.
+        
+        Cette méthode prend les informations principales de l'instance d'UpcomingMovie, 
+        puis elle envoie ces informations à une API FAST_API pour obtenir une prédiction 
+        sur le nombre d'entrées. Une fois la prédiction obtenue, elle met à jour 
+        l'attribut 'entree_predit' de l'instance avec la valeur prédite et sauvegarde l'instance.
+        
+        Utilise une requête POST vers FAST_API_URL pour obtenir la prédiction.
+        
+        Si une erreur HTTP se produit lors de la demande à l'API, elle sera affichée.
+        De même, pour les autres types d'erreurs.
+        
+        Note:
+            L'API doit renvoyer un JSON avec une clé "prediction" contenant la valeur prédite.
+        
+        Attributes:
+            entree_predit (int): Le nombre d'entrées prédit pour le film.
+        """
         data = {
             "titre_fr": self.titre_fr,
             "realisateur": self.realisateur,
@@ -68,6 +121,16 @@ class UpcomingMovie(models.Model):
             print(f"Other error occurred: {err}")
 
     def get_predicted_local_entries(self):
+        """
+        Calcule et retourne les entrées locales prévues pour le film.
+
+        Cette méthode convertit les entrées nationales prédites en entrées locales 
+        en utilisant un facteur de conversion fixe (1/2000). Cela représente le 
+        ratio des entrées locales par rapport aux entrées nationales.
+
+        Returns:
+            int: Le nombre arrondi d'entrées locales prévues pour le film.
+        """
         national_entries_predicted = self.entree_predit
         local_entries = national_entries_predicted * 1/2000
         return round(local_entries)

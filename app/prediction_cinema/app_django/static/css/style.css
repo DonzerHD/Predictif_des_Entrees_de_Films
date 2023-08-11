@@ -373,6 +373,7 @@ h3.movie-title{
 strong{
     font-weight: 900;
     color: grey;
+    font-style: oblique;
 }
 
 div.movie-info {

@@ -22,6 +22,23 @@ class CustomLogoutView(LogoutView):
 
 
 def inscription(request):
+    """
+    Gère l'inscription d'un nouvel utilisateur.
+
+    Si la méthode de la requête est POST, cette fonction traitera le formulaire d'inscription.
+    Si le formulaire est valide, il enregistrera le nouvel utilisateur, l'authentifiera
+    et le redirigera vers la page d'accueil. Si le formulaire n'est pas valide, il affichera
+    à nouveau le formulaire avec les erreurs.
+
+    Si la méthode de la requête n'est pas POST (par exemple, GET), elle affichera simplement
+    le formulaire d'inscription.
+
+    Args:
+        request (HttpRequest): Requête HTTP envoyée au serveur.
+
+    Returns:
+        HttpResponse: Réponse HTTP contenant le formulaire d'inscription ou une redirection vers la page d'accueil.
+    """
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -36,7 +53,20 @@ def inscription(request):
     return render(request, 'inscription.html', {'form': form})
     
 def select_rooms(predicted_entries):
-    """Sélectionnez les salles appropriées en fonction des entrées prévues."""
+    """
+    Sélectionne les salles optimales en fonction du nombre d'entrées prévues.
+
+    Détermine quelles salles ouvrir en fonction du nombre prévu.
+    Si l'ouverture d'une salle ne permet pas d'atteindre une capacité minimale
+    de 20%, elle n'est pas considérée comme rentable et n'est donc pas recommandée.
+
+    Args:
+        predicted_entries (int): Nombre d'entrées prévu.
+
+    Returns:
+        str: Noms des salles recommandées séparés par "et" si elles sont rentables, 
+        sinon retourne un message indiquant que ce n'est pas rentable.
+    """
     salles = {
         "Salle 1": 140,
         "Salle 2": 100,
@@ -45,29 +75,45 @@ def select_rooms(predicted_entries):
     }
 
     if predicted_entries < 0.2 * min(salles.values()):
-        return "Pas rentable"
+        return "Aucune, pas assez rentable"
 
     recommended_salles = []
+    while predicted_entries > 0:
+        best_fit_salle = min(salles.keys(), key=lambda k: (salles[k] - predicted_entries) if (salles[k] >= predicted_entries and k not in recommended_salles) else float('inf'))
 
-    sorted_salles = sorted(salles.items(), key=lambda x: x[1], reverse=True)  
+        if salles[best_fit_salle] < 0.2 * predicted_entries:
+            break
 
-    for salle, capacity in sorted_salles:
-        if predicted_entries >= 0.2 * capacity:
-            if predicted_entries < capacity:
-                recommended_salles.append(salle)
-                predicted_entries -= predicted_entries  
-            else:
-                recommended_salles.append(salle)
-                predicted_entries -= capacity  
+        recommended_salles.append(best_fit_salle)
+        predicted_entries -= salles[best_fit_salle]
 
-            if predicted_entries <= 0:
-                break
+        if predicted_entries > 0 and predicted_entries < 0.2 * min([s for name, s in salles.items() if name not in recommended_salles]):
+            break
 
-    return recommended_salles
+    if recommended_salles:
+        return ' et '.join(recommended_salles)
+    else:
+        return "Aucune, pas assez rentable"
+
 
 
 @login_required  
 def films_avec_predictions(request):
+    """
+    Récupère la liste des films à venir pour la semaine et prédit les entrées locales.
+    
+    Utilise l'API TMDBpour obtenir des détails sur les films à venir. 
+    Les films sont ensuite filtrés pour ne conserver que ceux qui sortent dans la semaine actuelle. 
+    Si un film possède un budget renseigné et n'est pas encore dans la base de données, 
+    il est ajouté et une prédiction est réalisée pour estimer les entrées en première semaine. 
+    Une salle est également recommandée en fonction de cette prédiction.
+
+    Args:
+        request (HttpRequest): L'objet de requête HTTP.
+
+    Returns:
+        HttpResponse: La réponse HTML pour la page de prédiction, avec les films et leurs détails.
+    """
     API_KEY = "a6275c028adf4e9bc5ae5f67edfb4c5f"
     URL = f"https://api.themoviedb.org/3/movie/upcoming?api_key={API_KEY}&region=FR&language=fr-FR"
 
@@ -108,6 +154,22 @@ def films_avec_predictions(request):
 
 @login_required
 def historique(request, year=None, month=None, day=None):
+    """
+    Affiche une liste de films basée sur des critères de recherche et une date spécifique.
+    
+    Les utilisateurs peuvent rechercher des films par titre, acteurs, genres ou réalisateur. 
+    De plus, ils peuvent filtrer les films selon une date de sortie spécifique.
+    Si aucune date n'est spécifiée, tous les films de la base de données sont affichés.
+    
+    Args:
+        request (HttpRequest): L'objet de requête HTTP.
+        year (int, optional): L'année de sortie du film à filtrer. Par défaut à None.
+        month (int, optional): Le mois de sortie du film à filtrer. Par défaut à None.
+        day (int, optional): Le jour de sortie du film à filtrer. Par défaut à None.
+
+    Returns:
+        HttpResponse: La réponse HTML pour la page historique, contenant les films correspondants aux critères.
+    """
     search_query = request.GET.get('search')
 
     if request.GET.get('selected_date'):
