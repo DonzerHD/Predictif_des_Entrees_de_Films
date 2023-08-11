@@ -5,8 +5,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         python3-dev \
         libpq-dev \
-        curl \   
-        gnupg \ 
+        curl \
+        gnupg \
+        unixodbc-dev \
         && apt-get -y autoremove \
         && apt-get clean
 
@@ -22,11 +23,18 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
+# Copy requirements file and install dependencies
 COPY requirements.txt /app
-
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
+# Copy the rest of the application
 COPY . /app
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000" ]
+# Copy and set the entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command to run the application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
