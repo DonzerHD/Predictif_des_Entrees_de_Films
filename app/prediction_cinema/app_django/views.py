@@ -102,9 +102,9 @@ def films_avec_predictions(request):
     """
     Récupère la liste des films à venir pour la semaine et prédit les entrées locales.
     
-    Utilise l'API TMDBpour obtenir des détails sur les films à venir. 
+    Utilise l'API TMDB pour obtenir des détails sur les films à venir. 
     Les films sont ensuite filtrés pour ne conserver que ceux qui sortent dans la semaine actuelle. 
-    Si un film possède un budget renseigné et n'est pas encore dans la base de données, 
+    Si un film n'est pas encore dans la base de données, 
     il est ajouté et une prédiction est réalisée pour estimer les entrées en première semaine. 
     Une salle est également recommandée en fonction de cette prédiction.
 
@@ -114,38 +114,42 @@ def films_avec_predictions(request):
     Returns:
         HttpResponse: La réponse HTML pour la page de prédiction, avec les films et leurs détails.
     """
-    API_KEY = "a6275c028adf4e9bc5ae5f67edfb4c5f"
-    URL = f"https://api.themoviedb.org/3/movie/upcoming?api_key={API_KEY}&region=FR&language=fr-FR"
-
-    response = requests.get(URL)
-    movies = response.json()['results']
-
-    # today = date.today()
-    # week_end = today + timedelta(days=7)
-    # movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= week_end]
     
-    # prend la date qui superieur a la date d'aujourd'hui sur 1 mois
-    # prend la date qui est supérieure à la date d'aujourd'hui
     today = date.today()
-    movies_after_today = [movie for movie in movies if date.fromisoformat(movie['release_date']) > today]
+    week_end = today + timedelta(days=14)
+    
+    # Récupération des films de la base de données
+    movies_from_db = UpcomingMovie.objects.filter(date_sortie__range=[today, week_end])
     movies_to_display = []
-    for movie in movies_after_today:
-        details_url = f"https://api.themoviedb.org/3/movie/{movie['id']}?api_key={API_KEY}"
-        credits_url = f"https://api.themoviedb.org/3/movie/{movie['id']}/credits?api_key={API_KEY}"
 
-        movie_details = requests.get(details_url).json()
-        credits = requests.get(credits_url).json()
+    for movie in movies_from_db:
+        predicted_local_entries = movie.get_predicted_local_entries()
+        room_to_open = select_rooms(predicted_local_entries)
+        movie.predicted_local_entries = predicted_local_entries
+        movie.room_to_open = room_to_open
+        movies_to_display.append(movie)
+    
+    # Si aucun film n'est trouvé dans la base de données pour la semaine à venir, requêtez l'API TMDB
+    if not movies_to_display:
+        API_KEY = "a6275c028adf4e9bc5ae5f67edfb4c5f"
+        URL = f"https://api.themoviedb.org/3/movie/upcoming?api_key={API_KEY}&region=FR&language=fr-FR"
+        response = requests.get(URL)
+        movies = response.json()['results']
+        movies_this_week = [movie for movie in movies if today <= date.fromisoformat(movie['release_date']) <= week_end]
 
-        if movie_details['budget'] >= 0:
-            existing_movie = UpcomingMovie.objects.filter(titre_non_modifie=movie['original_title']).first()
+        for movie in movies_this_week:
+            details_url = f"https://api.themoviedb.org/3/movie/{movie['id']}?api_key={API_KEY}"
+            credits_url = f"https://api.themoviedb.org/3/movie/{movie['id']}/credits?api_key={API_KEY}"
 
-            if not existing_movie:
-                upcoming_movie = UpcomingMovie.from_tmdb_data(movie, movie_details, credits)
-                upcoming_movie.predict_entries()
+            movie_details = requests.get(details_url).json()
+            credits = requests.get(credits_url).json()
+
+            upcoming_movie = UpcomingMovie.from_tmdb_data(movie, movie_details, credits)
+            upcoming_movie.predict_entries()
+
+            if not UpcomingMovie.objects.filter(titre_non_modifie=movie['original_title']).exists():
                 upcoming_movie.save()
-            else:
-                upcoming_movie = existing_movie
-            
+
             predicted_local_entries = upcoming_movie.get_predicted_local_entries()
             room_to_open = select_rooms(predicted_local_entries)
 

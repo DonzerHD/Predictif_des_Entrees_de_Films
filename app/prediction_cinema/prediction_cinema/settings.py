@@ -89,7 +89,7 @@ DATABASES = {
         'USER': os.getenv('DB_UID'),
         'PASSWORD': os.getenv('DB_PWD'),
         'OPTIONS': {
-            'driver': os.getenv('DB_DRIVER'),
+            'driver': 'ODBC Driver 18 for SQL Server',
         },
     },
 }
